@@ -129,5 +129,24 @@ alias gwip='git-nuke'
 # -----------------------------------------------------------
 eval "$(starship init bash)"
 
-# 8. PYSCHE EXTRAS
-source /home/tanged/sources/pysche/bash/extras.bashrc
+# 8. CONFIG HELPERS
+# Quickly edit this file (the repo version, not the local loader)
+alias bashconfig='code $PYSCHE_BASH_DIR/.bashrc && source $HOME/.bashrc'
+alias reload='source $HOME/.bashrc'
+
+# Helper to remember aliases: 'aliases git' shows all git aliases
+function aliases() {
+    if [ -z "$1" ]; then
+        alias
+    else
+        alias | grep --color=always "$1"
+    fi
+}
+
+# 9. PYSCHE EXTRAS
+PYSCHE_BASH_DIR="$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )"
+if [ -f "$PYSCHE_BASH_DIR/extras.bashrc" ]; then
+    source "$PYSCHE_BASH_DIR/extras.bashrc"
+else
+    echo "⚠️ Could not find extras.bashrc at $PYSCHE_BASH_DIR"
+fi
