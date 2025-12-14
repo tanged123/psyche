@@ -104,39 +104,139 @@ if command -v batcat >/dev/null && ! command -v bat >/dev/null; then
     export PATH=$HOME/.local/bin:$PATH
 fi
 
-# 4. Perform Symlinks
-echo "🔗 Linking Configuration Files..."
+# 4. Configure Dotfiles (Smart Merge)
+echo "🔗 Configuring Dotfiles..."
 
-create_link() {
+# Helper: Smart Symlink (Backs up if exists)
+link_file() {
     local src=$1
     local dest=$2
-    
+
     mkdir -p "$(dirname "$dest")"
 
     if [ -L "$dest" ]; then
-        log "$dest is already a link (skipping)"
+        # Check if it already points to the right place
+        local current_target=$(readlink -f "$dest")
+        if [ "$current_target" == "$src" ]; then
+             log "$dest is already correctly linked."
+             return
+        fi
+        # Correcting link
+        log "Updating link for $dest"
+        rm "$dest"
+        ln -s "$src" "$dest"
+        success "Linked $dest -> $src"
     elif [ -f "$dest" ]; then
         warn "Backup created for existing $dest"
-        mv "$dest" "${dest}.backup"
+        mv "$dest" "${dest}.backup.$(date +%s)"
         ln -s "$src" "$dest"
-        success "Linked $dest"
+        success "Linked $dest -> $src"
     else
         ln -s "$src" "$dest"
-        success "Linked $dest"
+        success "Linked $dest -> $src"
     fi
 }
 
-# Bash
-create_link "$DOTFILES_DIR/bash/.bashrc" "$HOME/.bashrc"
+# Helper: Append source if not present
+append_source() {
+    local file=$1
+    local line=$2
+    local comment=$3
+    
+    if [ ! -f "$file" ]; then
+        touch "$file"
+    fi
 
-# Starship
-create_link "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
+    if grep -Fq "$line" "$file"; then
+        log "$file already includes config."
+    else
+        echo "" >> "$file"
+        echo "$comment" >> "$file"
+        echo "$line" >> "$file"
+        success "Updated $file"
+    fi
+}
+
+# Helper: Git Config Merge (Prepend include)
+configure_git() {
+    local src=$1
+    local config_file="$HOME/.gitconfig"
+    
+    # Handle symlink case: if it's a symlink, we want to replace it with a real file that INCLUDES the source,
+    # rather than BE the source. This allows local overrides.
+    if [ -L "$config_file" ]; then
+        warn "Detected existing symlink for .gitconfig. Replacing with standard config that includes the repo file."
+        local link_target=$(readlink -f "$config_file")
+        if [ "$link_target" == "$src" ]; then
+            # It was just our simple link. Safe to remove.
+            rm "$config_file"
+            touch "$config_file"
+            log "Removed symlink to repo."
+        else
+            # It was a link to somewhere else. We should probably back it up.
+            mv "$config_file" "${config_file}.backup.$(date +%s)"
+            touch "$config_file"
+            warn "Backed up prior symlink."
+        fi
+    fi
+
+    if [ ! -f "$config_file" ]; then
+        touch "$config_file"
+    fi
+    
+    # Check if already included
+    if grep -q "path = $src" "$config_file"; then
+        log "Git config already includes pysche config."
+        return
+    fi
+    
+    # Prepend include to ensure local settings (at bottom) override global defaults (at top)
+    echo "Prepending include to $config_file..."
+    
+    # Create temp file
+    echo "[include]" > "${config_file}.tmp"
+    echo "    path = $src" >> "${config_file}.tmp"
+    echo "" >> "${config_file}.tmp" 
+    cat "$config_file" >> "${config_file}.tmp"
+    mv "${config_file}.tmp" "$config_file"
+    
+    success "Added include to start of .gitconfig"
+}
+
+# Helper: Configure Bash (Smart Merge & Symlink Handle)
+configure_bash() {
+    local src="$DOTFILES_DIR/bash/.bashrc"
+    local dest="$HOME/.bashrc"
+    
+    # Handle symlink case: .bashrc should NOT be a symlink if we want to support local configs + repo configs
+    if [ -L "$dest" ]; then
+        warn "Detected existing symlink for .bashrc. Replacing with standard file that sources the repo file."
+        local link_target=$(readlink -f "$dest")
+        if [ "$link_target" == "$src" ]; then
+            rm "$dest"
+            touch "$dest"
+            log "Removed symlink to repo."
+        else
+            mv "$dest" "${dest}.backup.$(date +%s)"
+            touch "$dest"
+            warn "Backed up prior symlink."
+        fi
+    fi
+
+    append_source "$dest" "source $src" "# Pysche Tools"
+}
+
+# Bash
+configure_bash
+
+# Starship (Config file usually needs to be at a specific path, symlinking is best)
+link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
 
 # Git
-create_link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
-create_link "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
+configure_git "$DOTFILES_DIR/git/.gitconfig"
+link_file "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
 
 # Tmux
-create_link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
+append_source "$HOME/.tmux.conf" "source-file $DOTFILES_DIR/tmux/.tmux.conf" "# Pysche Tmux"
 
 echo "🎉 Done! please restart your shell or run 'source ~/.bashrc'"
