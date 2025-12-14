@@ -36,3 +36,37 @@ fi
 if command -v lazygit >/dev/null 2>&1; then
     alias lg='lazygit'
 fi
+
+# 6. Modern Replacements (ps, du)
+if command -v procs >/dev/null 2>&1; then
+    alias ps='procs'
+fi
+
+if command -v dust >/dev/null 2>&1; then
+    alias du='dust'
+fi
+
+# 7. Productivity Aliases
+if command -v hyperfine >/dev/null 2>&1; then
+    alias bench='hyperfine --warmup 3'
+fi
+
+if command -v tokei >/dev/null 2>&1; then
+    alias loc='tokei'
+fi
+
+if command -v ncdu >/dev/null 2>&1; then
+    alias diskuse='ncdu'
+fi
+
+if command -v glow >/dev/null 2>&1; then
+    alias md='glow'
+fi
+
+# 8. Entr (file watcher) convenience function
+# Usage: watch-run "*.cpp" make
+if command -v entr >/dev/null 2>&1; then
+    watch-run() {
+        find . -name "$1" | entr -c "${@:2}"
+    }
+fi

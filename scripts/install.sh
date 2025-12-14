@@ -59,10 +59,11 @@ PKG_MANAGER=$(get_pkg_manager)
 echo "Detected Package Manager: $PKG_MANAGER"
 
 # List of tools to install
-# List of tools to install
 # eza: modern ls, zoxide: smart cd, direnv: auto-env, lazygit: git ui, btop: monitor
 # delta: better git diffs, tldr: cheat sheets, jq: json processor
-TOOLS="git tmux curl ripgrep fd-find bat eza fzf zoxide direnv lazygit btop jq tldr delta" 
+# hyperfine: benchmarking, tokei: code stats, ncdu: disk usage, entr: file watcher
+# procs: better ps, dust: better du, xsv: csv toolkit, glow: markdown viewer
+TOOLS="git tmux curl ripgrep fd-find bat eza fzf zoxide direnv lazygit btop jq tldr delta hyperfine tokei ncdu entr xsv procs dust glow" 
 
 if [ "$PKG_MANAGER" != "unknown" ]; then
     log "Installing core tools..."

@@ -27,6 +27,25 @@
             eza      # Better ls
             fd       # Better find
             jq       # JSON processor
+            delta    # Better git diffs
+            
+            # Navigation & Git
+            zoxide   # Smarter cd
+            lazygit  # Git TUI
+            
+            # Monitoring & Analysis
+            btop     # System monitor
+            ncdu     # Disk usage analyzer
+            procs    # Better ps
+            dust     # Better du
+            
+            # Productivity
+            tldr     # Simplified man pages
+            hyperfine # Benchmarking
+            tokei    # Code statistics
+            entr     # Run on file change
+            xsv      # CSV toolkit
+            glow     # Markdown renderer
             
             # Shell integration
             direnv
