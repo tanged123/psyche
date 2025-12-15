@@ -104,11 +104,30 @@ alias nix-clean='sudo nix-collect-garbage -d && sudo nix-store --optimize'
 # 6. THE "NUCLEAR" GIT WIP ALIAS
 # -----------------------------------------------------------
 function git-nuke() {
+    # 1. Check if git repo
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
         echo "❌ Not a git repository. Aborting."
         return 1
     fi
+    # 2. Safety checklist: No Home, No Root
+    if [[ "$PWD" == "$HOME" ]]; then
+        echo "❌ DANGER: You are in your HOME directory. git-nuke is not allowed here."
+        return 1
+    fi
+    if [[ "$PWD" == "/" ]]; then
+        echo "❌ DANGER: You are in the ROOT directory. git-nuke is not allowed here."
+        return 1
+    fi
+    # 3. Confirmation
     echo "☢️  NUKING REPOSITORY & SUBMODULES... ☢️"
+    echo "Current directory: $PWD"
+    echo "This will destroy all untracked files and reset everything to HEAD."
+    read -p "Are you absolutely sure? (y/N) " -n 1 -r
+    echo    # Move to a new line
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborting."
+        return 1
+    fi
     echo "Step 1: Resetting main repo..."
     git reset --hard HEAD
     echo "Step 2: Cleaning untracked files..."
@@ -122,7 +141,7 @@ function git-nuke() {
     git submodule update --init --recursive
     echo "✅ Repo is fresh and clean."
 }
-alias gwip='git-nuke'
+alias gwipe='git-nuke'
 
 # -----------------------------------------------------------
 # 7. STARSHIP INIT
