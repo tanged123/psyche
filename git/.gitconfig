@@ -1,6 +1,7 @@
 [user]
-    name = Edward Tang
-    email = tanged@umich.edu
+    # TODO: Set your own name and email
+    # name = Your Name
+    # email = you@example.com
 
 [alias]
     s = status

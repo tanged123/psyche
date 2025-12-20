@@ -236,6 +236,44 @@ link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
 configure_git "$DOTFILES_DIR/git/.gitconfig"
 link_file "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
 
+# Git Identity Setup
+echo ""
+echo "🔐 Git Identity Setup"
+echo "---------------------"
+
+# Check if already configured
+CURRENT_NAME=$(git config --global user.name 2>/dev/null || echo "")
+CURRENT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+
+if [ -n "$CURRENT_NAME" ] && [ -n "$CURRENT_EMAIL" ]; then
+    log "Git identity already configured:"
+    echo "   Name:  $CURRENT_NAME"
+    echo "   Email: $CURRENT_EMAIL"
+    read -p "Do you want to change it? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log "Keeping existing git identity."
+    else
+        CURRENT_NAME=""
+        CURRENT_EMAIL=""
+    fi
+fi
+
+if [ -z "$CURRENT_NAME" ] || [ -z "$CURRENT_EMAIL" ]; then
+    read -p "Enter your name for git commits: " GIT_NAME
+    read -p "Enter your email for git commits: " GIT_EMAIL
+    
+    if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; then
+        git config --global user.name "$GIT_NAME"
+        git config --global user.email "$GIT_EMAIL"
+        success "Git identity configured: $GIT_NAME <$GIT_EMAIL>"
+    else
+        warn "Skipped git identity setup. You can set it later with:"
+        echo "   git config --global user.name 'Your Name'"
+        echo "   git config --global user.email 'you@example.com'"
+    fi
+fi
+
 # Tmux
 append_source "$HOME/.tmux.conf" "source-file $DOTFILES_DIR/tmux/.tmux.conf" "# Pysche Tmux"
 
