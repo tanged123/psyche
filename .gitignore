@@ -3,6 +3,20 @@
 *~
 *.swp
 
+# Personal/Sensitive Info
+*.local
+*.private
+*.secret
+.env.local
+.env.*.local
+secrets/
+private/
+credentials/
+*.pem
+*.key
+id_rsa*
+*.gpg
+
 # Logs
 logs/
 *.log
