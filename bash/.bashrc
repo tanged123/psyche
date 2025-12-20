@@ -35,6 +35,25 @@ alias ....='cd ../../..'
 alias search='grep -rnI --exclude-dir={.git,.roo,node_modules,target,dist} .'
 function f() { find . -type f -iname "*$1*"; }
 
+# -- COUNTING LINES --
+function loc() {
+    if command -v tokei &> /dev/null; then
+        tokei "$@"
+    else
+        # Fallback: Count lines in non-binary files, ignoring git/node_modules
+        # 1. Find files (skipping common junk folders)
+        # 2. Filter out likely binary extensions/files
+        # 3. Count lines
+        find . -type f \
+            -not -path '*/.*' \
+            -not -path '*/node_modules/*' \
+            -not -path '*/target/*' \
+            -not -path '*/dist/*' \
+            -not -path '*/build/*' \
+            -exec grep -Iq . {} \; -print0 | xargs -0 wc -l | tail -n 1
+    fi
+}
+
 # -- CREATING STUFF --
 alias mk='mkdir -p'
 function new() { mkdir -p "$(dirname "$1")" && touch "$1"; echo "✨ Created: $1"; }
@@ -74,6 +93,61 @@ alias wcopy='clip.exe'
 # 4. GIT SHORTCUTS
 # -----------------------------------------------------------
 alias gs='git status'
+# GIT WRAPPER: Auto-maps master -> main if master is missing
+function git() {
+    # 1. If command is not a checkout/switch/pull/push/merge/rebase/branch/diff, just run git
+    if [[ "$1" != "checkout" && "$1" != "co" && "$1" != "switch" && "$1" != "pull" && "$1" != "push" && "$1" != "merge" && "$1" != "rebase" && "$1" != "branch" && "$1" != "diff" ]]; then
+        command git "$@"
+        return $?
+    fi
+
+    # 2. Check if we are trying to use 'master'
+    local args=("$@")
+    local has_master=false
+    for arg in "${args[@]}"; do
+        if [[ "$arg" == "master" ]]; then
+            has_master=true
+            break
+        fi
+    done
+
+    # 3. If no 'master' arg, just run git
+    if [[ "$has_master" == "false" ]]; then
+        command git "$@"
+        return $?
+    fi
+
+    # 4. Check if 'master' branch actually exists
+    # We use verify to check local packed/loose refs
+    if command git rev-parse --verify master >/dev/null 2>&1 || \
+       command git rev-parse --verify remotes/origin/master >/dev/null 2>&1; then
+        # Master exists, so respect the user's wish
+        command git "$@"
+        return $?
+    fi
+
+    # 5. Master does NOT exist. Check if 'main' exists
+    if command git rev-parse --verify main >/dev/null 2>&1 || \
+       command git rev-parse --verify remotes/origin/main >/dev/null 2>&1; then
+        # 6. Replace 'master' with 'main' in the args
+        local new_args=()
+        for arg in "${args[@]}"; do
+            if [[ "$arg" == "master" ]]; then
+                new_args+=("main")
+            else
+                new_args+=("$arg")
+            fi
+        done
+        
+        echo "💡 'master' branch not found. Assuming you meant 'main'..."
+        command git "${new_args[@]}"
+        return $?
+    fi
+
+    # 7. Neither exists (or both missing), let git handle the error
+    command git "$@"
+}
+
 alias ga='git add'
 alias gaa='git add .'
 alias gc='git commit -m'
