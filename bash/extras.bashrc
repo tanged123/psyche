@@ -51,9 +51,7 @@ if command -v hyperfine >/dev/null 2>&1; then
     alias bench='hyperfine --warmup 3'
 fi
 
-if command -v tokei >/dev/null 2>&1; then
-    alias loc='tokei'
-fi
+
 
 if command -v ncdu >/dev/null 2>&1; then
     alias diskuse='ncdu'
