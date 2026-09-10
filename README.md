@@ -53,21 +53,46 @@ settings are copies, so moving the checkout won't break shell startup.
   terminal font with the desired glyph coverage.
 - **Ghostty on Unix:** an opaque dark background, readable text, modest padding
   and a steady cursor. Existing local terminal settings override these defaults.
-- **Bash / Zsh:** useful history defaults, `ll`, `la`, `..`, and guarded integration
+- **Bash / Zsh:** history settings and all original navigation, Git, Nix and utility shortcuts,
+  and guarded integration
   for Starship, direnv, zoxide and supported fzf shell bindings. Zsh completion is
   enabled. Older fzf packages remain usable as standalone commands.
 - **PowerShell:** history search on arrow keys, plus Starship and zoxide when present.
 - **Git:** `main` for new repos, prune deleted remote refs on fetch, fast-forward-only
-  pulls, `zdiff3` conflicts, `git s`, and `git l`. A diverged pull stops for an explicit
+  pulls, `zdiff3` conflicts and the original Git aliases. A diverged pull stops for an explicit
   merge/rebase decision. Identity, editor, pager and line endings remain local.
 - **Tmux on Unix:** the existing mouse support, `Ctrl-a` prefix and pane bindings.
 - **AI:** the same [personal preferences](ai/preferences.md) deployed to Codex and
   Claude Code's native user instruction files.
 
-Standard commands keep their normal meaning. Removed the Git argument-rewriting
-wrapper, repository-wipe helpers, automatic `cat`/`ls`/`cd`/`ps`/`du` replacements,
-large alias catalog and mandatory third-party utilities. Use optional programs by
-their actual names; zoxide adds `z` without replacing `cd`.
+All original shell macros and shorthands are preserved, including `search`, `f`,
+`loc`, `mk`, `new`, `copy`, `move`, `del`, `logrun`, the navigation aliases, Nix
+helpers, `aliases`, `reload`, `bashconfig`/`zshconfig`, and `git-nuke`/`gwipe`.
+The repository-wipe helper retains its confirmation prompt. The original Git
+wrapper also retains its `master` to `main` mapping when only `main` exists.
+
+Optional-tool shortcuts and replacements return when their tools are installed:
+`lg`, `bench`, `diskuse`, `md`, `watch-run`, eza's listing aliases, bat's `cat`,
+zoxide's `cd`, procs' `ps` and dust's `du`. They are not mandatory packages.
+`bashconfig`/`zshconfig` edit this checkout in VS Code, reinstall shell settings
+when the editor closes, and reload the shell. Keep the checkout at the installed
+path for those editing helpers; rerun installation after moving it.
+
+Git shortcuts in Bash and Zsh:
+
+| Shortcut | Command |
+| --- | --- |
+| `gs` | `git status` |
+| `ga` / `gaa` | `git add` / `git add .` |
+| `gc "message"` | `git commit -m "message"` |
+| `gp` / `gpl` | `git push` / `git pull` |
+| `gd` / `gco` | `git diff` / `git checkout` |
+| `gl` | `git log --oneline --graph --decorate` |
+| `gsu` | `git submodule update --init --recursive` |
+
+Native Git aliases work in every shell: `git s`, `git co`, `git c`, `git a`,
+`git b`, `git p` and `git l`. After pulling updates, rerun the installer and open
+a new terminal to refresh aliases.
 
 ## Optional packages
 

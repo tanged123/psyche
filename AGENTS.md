@@ -12,3 +12,6 @@ applying a tested installation explicitly within the user's requested setup.
 Preserve Starship's decorative symbols and enabled Git diff counts; these are
 intentional user preferences. Keep Bash on Linux, Zsh on macOS and PowerShell on
 Windows usable without a shell framework. Ghostty is a terminal, not a shell.
+Preserve all existing macros and shorthands, including navigation, Git, Nix,
+utility and optional-tool aliases. The user actively uses them. Do not remove or
+rename them as cleanup. Keep installation improvements separate from shell habits.

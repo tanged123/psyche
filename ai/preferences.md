@@ -59,5 +59,7 @@ specific contracts; do not impose one project's architecture on another.
   After meaningful checks pass, broaden testing only for an unresolved concern.
 - Keep commands and logs quiet. Never print credentials or commit machine secrets.
   Keep account state and permissions separate from portable preferences.
+- Preserve established shell macros, shorthands and decorative prompt symbols.
+  Do not remove familiar conveniences as cleanup; improve installation separately.
 - Keep Git changes focused. No blanket staging, destructive resets, force pushes,
   publishing or messages to others outside the user's authorization.

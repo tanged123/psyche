@@ -215,6 +215,7 @@ class InstallerTests(unittest.TestCase):
         fake_starship.chmod(0o755)
         # compinit uses the system mv when persisting its completion cache.
         (bin_dir / 'mv').symlink_to(shutil.which('mv'))
+        (bin_dir / 'uname').symlink_to(shutil.which('uname'))
         env = {**os.environ, 'HOME': str(self.home), 'ZDOTDIR': str(self.home), 'PATH': str(bin_dir), 'TERM': 'dumb'}
         for shell, relative in [('bash', 'bash/.bashrc'), ('zsh', 'zsh/.zshrc')]:
             executable = shutil.which(shell)
@@ -222,7 +223,7 @@ class InstallerTests(unittest.TestCase):
                 continue
             flags = ['--noprofile', '--norc', '-ic'] if shell == 'bash' else ['-df', '-ic']
             # Pass paths as positional parameters to cover spaces, quotes and Unicode.
-            script = '. "$1"; . "$1"; for name in git cat ls cd ps du; do alias "$name" 2>/dev/null && exit 9; done; printf "READY\\n"'
+            script = '. "$1"; . "$1"; for name in gs ga gaa gc gp gpl gd gco gl gsu ll la lla l .. ... .... mk copy move del nixdev nixrun nsh nixlock nixup nixcheck nixs rebuild nix-hist nix-clean gwipe reload; do alias "$name" >/dev/null 2>&1 || exit 9; done; for name in git git-nuke f loc new logrun aliases; do typeset -f "$name" >/dev/null || exit 8; done; printf "READY\\n"'
             loader = self.home / ('.bashrc' if shell == 'bash' else '.zshrc')
             result = subprocess.run([executable, *flags, script, 'test', str(loader)], env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)

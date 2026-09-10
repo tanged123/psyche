@@ -9,6 +9,11 @@
 [diff]
     colorMoved = default
 [alias]
-    s = status --short --branch
+    s = status
+    co = checkout
+    c = commit
+    a = add
+    b = branch
+    p = push
     l = log --oneline --graph --decorate
 # Identity, editor, pager and line endings belong to the machine/project.

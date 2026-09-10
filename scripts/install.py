@@ -132,8 +132,10 @@ def make_plan(args):
     if 'shell' in components:
         if os.name != 'nt':
             for relative, dest in [('bash/.bashrc', home / '.bashrc'), ('zsh/.zshrc', zsh_dir / '.zshrc')]:
+                shell = relative.split('/')[0]
+                copy(f'{shell}/extras.{shell}rc')
                 source = shlex.quote(str(copy(relative)))
-                merge(dest, f'[ ! -f {source} ] || . {source}', relative)
+                merge(dest, f'PSYCHE_REPO_ROOT={shlex.quote(str(ROOT))}\n[ ! -f {source} ] || . {source}', relative)
             if platform.system() == 'Darwin':
                 login = next((home / name for name in ['.bash_profile', '.bash_login', '.profile']
                               if (home / name).exists()), home / '.bash_profile')
