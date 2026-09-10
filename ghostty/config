@@ -1,0 +1,9 @@
+# Let Ghostty choose its bundled font and the user's login shell.
+font-size = 12
+background = #181818
+foreground = #e0e0e0
+background-opacity = 1
+window-padding-x = 10
+window-padding-y = 8
+cursor-style-blink = false
+mouse-hide-while-typing = true

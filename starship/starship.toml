@@ -17,6 +17,7 @@ $git_state\
 $git_metrics\
 $git_status\
 $nix_shell\
+$cmd_duration\
 $line_break\
 $character"""
 
@@ -109,4 +110,4 @@ style = "bold blue"
 
 [cmd_duration]
 min_time = 2000
-format = "took [$duration](bold yellow)"
+format = "took [$duration](bold yellow) "

@@ -1,5 +1,5 @@
 {
-  description = "Pysche Developer Environment";
+  description = "Psyche portable settings and installer tools";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -10,58 +10,16 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
-      in
-      {
+        core = with pkgs; [ git ripgrep starship ];
+        extras = with pkgs; [ fzf jq zoxide direnv tmux ];
+      in {
+        packages = {
+          default = pkgs.buildEnv { name = "psyche-core"; paths = core; };
+          extras = pkgs.buildEnv { name = "psyche-extras"; paths = extras; };
+          inherit (pkgs) python3 git ripgrep starship fzf jq zoxide direnv tmux;
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux { inherit (pkgs) ghostty; };
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            # Core Tools
-            git
-            tmux
-            starship
-            bashInteractive
-            
-            # Superpowers
-            fzf      # Fuzzy finder
-            ripgrep  # Better grep
-            bat      # Better cat
-            eza      # Better ls
-            fd       # Better find
-            jq       # JSON processor
-            delta    # Better git diffs
-            
-            # Navigation & Git
-            zoxide   # Smarter cd
-            lazygit  # Git TUI
-            
-            # Monitoring & Analysis
-            btop     # System monitor
-            ncdu     # Disk usage analyzer
-            procs    # Better ps
-            dust     # Better du
-            
-            # Productivity
-            tldr     # Simplified man pages
-            hyperfine # Benchmarking
-            tokei    # Code statistics
-            entr     # Run on file change
-            xsv      # CSV toolkit
-            glow     # Markdown renderer
-            
-            # Shell integration
-            direnv
-          ];
-
-          shellHook = ''
-            # Initialize Starship
-            eval "$(starship init bash)"
-            
-            # Initialize Direnv hook
-            eval "$(direnv hook bash)"
-
-            echo "🚀 Pysche Dev Environment Loaded!"
-            echo "   - Tmux, Starship, Fzf, Ripgrep, Bat, Eza ready."
-          '';
+          packages = core ++ (with pkgs; [ python3 shellcheck zsh bashInteractive ]);
         };
-      }
-    );
+      });
 }

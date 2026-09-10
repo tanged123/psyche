@@ -1,4 +1,4 @@
-# OS generated files
+# OS and editor temporary files; project ignores belong in each repository.
 .DS_Store
 .DS_Store?
 ._*
@@ -6,16 +6,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Editors
-.vscode/
-.idea/
 *.swp
 *.swo
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv
+# Keep the previous protection for local environment secrets.
 .env
