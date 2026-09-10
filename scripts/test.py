@@ -46,6 +46,38 @@ class InstallerTests(unittest.TestCase):
         self.run_install('--dry-run')
         self.assertEqual(list(self.home.iterdir()), [])
 
+    @unittest.skipIf(os.name == 'nt', 'Bash configuration')
+    def test_handwritten_shell_is_kept_until_explicit_adoption(self):
+        original = '#!/bin/bash\nexport KEEP_ME=yes\nalias gs="git status -sb"\n'
+        path = self.write('.bashrc', original)
+        self.run_install('--components', 'shell')
+        self.assertEqual(path.read_text(), original)
+        self.assertTrue((self.home / '.config/psyche/INTEGRATION.md').exists())
+        self.run_install('--components', 'shell', '--adopt-shell')
+        self.assertTrue(path.read_text().endswith(original))
+        self.assertEqual(path.read_text().count('# >>> psyche >>>'), 1)
+
+    def test_manual_mode_keeps_all_user_configs(self):
+        paths = {'.gitconfig': '[user]\n name = Mine\n', '.codex/AGENTS.md': 'My rules\n',
+                 '.config/starship.toml': 'add_newline = false\n'}
+        for path, content in paths.items():
+            self.write(path, content)
+        self.run_install('--manual')
+        for path, content in paths.items():
+            self.assertEqual((self.home / path).read_text(), content)
+        self.assertFalse(self.profile.exists())
+
+    def test_custom_prompt_and_later_edits_are_preserved(self):
+        path = self.write('.config/starship.toml', 'add_newline = false\n')
+        self.run_install('--components', 'prompt')
+        self.assertEqual(path.read_text(), 'add_newline = false\n')
+        self.run_install('--components', 'prompt', '--replace-prompt')
+        self.assertEqual(path.read_bytes(), (ROOT / 'starship/starship.toml').read_bytes())
+        content = path.read_text() + '\n# My local change\n'
+        path.write_text(content)
+        self.run_install('--components', 'prompt')
+        self.assertEqual(path.read_text(), content)
+
     @unittest.skipIf(os.name == 'nt', 'Unix entry point')
     def test_unix_entry_point(self):
         result = subprocess.run(['bash', str(ROOT / 'scripts/install.sh'), '--home', str(self.home), '--dry-run'],
@@ -58,7 +90,7 @@ class InstallerTests(unittest.TestCase):
         path = self.write('.config/ghostty/config.ghostty', 'font-size = 16\n')
         self.run_install('--components', 'terminal')
         self.assertTrue(path.read_text().endswith('font-size = 16\n'))
-        self.assertIn('background = #010b17', path.read_text())
+        self.assertIn('background = #1e1e2e', path.read_text())
         self.assertFalse((path.parent / 'config').exists())
         self.run_install('--components', 'terminal')
         self.assertEqual(len(self.backups()), 1)
@@ -131,10 +163,10 @@ class InstallerTests(unittest.TestCase):
     def test_unrelated_symlink_is_not_modified(self):
         target = self.write('outside', 'untouched\n')
         (self.home / '.bashrc').symlink_to(target)
-        self.run_install(ok=False)
+        self.run_install()
         self.assertEqual(target.read_text(), 'untouched\n')
         self.assertTrue((self.home / '.bashrc').is_symlink())
-        self.assertFalse((self.home / '.config').exists())
+        self.assertTrue((self.home / '.config/psyche/INTEGRATION.md').exists())
 
     @unittest.skipIf(os.name == 'nt', 'Unix legacy installation')
     def test_legacy_source_lines_and_links_migrate(self):
@@ -175,7 +207,7 @@ class InstallerTests(unittest.TestCase):
     def test_utf16_powershell_profile_is_preserved(self):
         self.profile.parent.mkdir(parents=True)
         self.profile.write_bytes('# Local preference\r\n'.encode('utf-16'))
-        self.run_install('--components', 'shell')
+        self.run_install('--components', 'shell', '--adopt-shell')
         data = self.profile.read_bytes()
         self.assertTrue(data.startswith(b'\xff\xfe'))
         self.assertIn('# Local preference\r\n', data.decode('utf-16'))
@@ -186,7 +218,8 @@ class InstallerTests(unittest.TestCase):
     def test_macos_uses_existing_login_file(self):
         self.write('.profile', 'export KEEP_LOGIN=yes\n')
         args = mock.Mock(home=str(self.home), config_home=None, codex_home=None,
-                         claude_home=None, zsh_dir=None, powershell_profile=None, components=['shell'])
+                         claude_home=None, zsh_dir=None, powershell_profile=None, components=['shell'],
+                         manual=False, adopt_shell=True, replace_prompt=False)
         with mock.patch('install.platform.system', return_value='Darwin'):
             plan, _ = install.make_plan(args)
         self.assertIn(self.home / '.profile', plan)

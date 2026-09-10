@@ -96,6 +96,24 @@ def make_plan(args):
     zsh_dir = location(args.zsh_dir, 'ZDOTDIR', home)
     state = home / '.local/state/psyche'
     plan = {}
+    snippets = []
+
+    def keep(path, body=None):
+        print(f'Keep existing {path}')
+        if body is not None:
+            snippets.append(f'## {path}\n\n```text\n{body.rstrip()}\n```\n')
+
+    def known_link(path, relative):
+        return path.is_symlink() and relative and str(absolute(path.parent / os.readlink(path))) in legacy_paths(relative)
+
+    def unchanged_install(path):
+        if not path.is_file():
+            return False
+        for manifest in sorted((state / 'backups').glob('*/manifest.json'), reverse=True):
+            for entry in json.loads(manifest.read_text(encoding='utf-8')):
+                if entry['path'] == str(path):
+                    return entry['after'] == digest(path.read_bytes())
+        return False
 
     def add(path, data, legacy=None):
         path = absolute(path)
@@ -118,11 +136,19 @@ def make_plan(args):
         add(path, (ROOT / relative).read_bytes(), relative)
         return path
 
-    def merge(path, body, relative=None, kind='shell', markdown=False):
-        if path.is_symlink() and relative and str(absolute(path.parent / os.readlink(path))) in legacy_paths(relative):
+    def merge(path, body, relative=None, kind='shell', markdown=False, shell=False):
+        legacy_link = known_link(path, relative)
+        if (path.is_symlink() and not legacy_link) or args.manual:
+            keep(path, body)
+            return
+        if legacy_link:
             text, encoding, newline = '', 'utf-8', '\n'
         else:
             text, encoding, newline = read_text(path)
+        legacy_source = relative and remove_legacy(text, relative, kind) != text
+        if shell and path.exists() and text.strip() and '# >>> psyche >>>' not in text and not legacy_link and not legacy_source and not args.adopt_shell:
+            keep(path, body)
+            return
         if relative:
             text = remove_legacy(text, relative, kind)
         result = managed(text, body, markdown).replace('\n', newline).encode(encoding)
@@ -135,15 +161,15 @@ def make_plan(args):
                 shell = relative.split('/')[0]
                 copy(f'{shell}/extras.{shell}rc')
                 source = shlex.quote(str(copy(relative)))
-                merge(dest, f'PSYCHE_REPO_ROOT={shlex.quote(str(ROOT))}\n[ ! -f {source} ] || . {source}', relative)
+                merge(dest, f'PSYCHE_REPO_ROOT={shlex.quote(str(ROOT))}\n[ ! -f {source} ] || . {source}', relative, shell=True)
             if platform.system() == 'Darwin':
                 login = next((home / name for name in ['.bash_profile', '.bash_login', '.profile']
                               if (home / name).exists()), home / '.bash_profile')
                 source = shlex.quote(str(home / '.bashrc'))
-                merge(login, f'[ -z "${{BASH_VERSION:-}}" ] || [ ! -f {source} ] || . {source}')
+                merge(login, f'[ -z "${{BASH_VERSION:-}}" ] || [ ! -f {source} ] || . {source}', shell=True)
         if args.powershell_profile:
             source = str(copy('powershell/profile.ps1')).replace("'", "''")
-            merge(absolute(args.powershell_profile), f"if (Test-Path -LiteralPath '{source}') {{ . '{source}' }}")
+            merge(absolute(args.powershell_profile), f"if (Test-Path -LiteralPath '{source}') {{ . '{source}' }}", shell=True)
         elif os.name == 'nt':
             raise ValueError('use install.ps1 or provide --powershell-profile on Windows')
     if 'git' in components:
@@ -158,11 +184,17 @@ def make_plan(args):
         git_config = location(None, 'GIT_CONFIG_GLOBAL', git_default)
         merge(git_config, body, 'git/.gitconfig', 'git')
         old_ignore = home / '.gitignore_global'
-        if old_ignore.is_symlink() and str(absolute(old_ignore.parent / os.readlink(old_ignore))) in legacy_paths('git/.gitignore_global'):
+        if not args.manual and old_ignore.is_symlink() and str(absolute(old_ignore.parent / os.readlink(old_ignore))) in legacy_paths('git/.gitignore_global'):
             copy('git/.gitignore_global', old_ignore)
     if 'prompt' in components:
         prompt = location(None, 'STARSHIP_CONFIG', config / 'starship.toml')
-        copy('starship/starship.toml', prompt)
+        source = copy('starship/starship.toml')
+        if args.manual or (prompt.is_symlink() and not known_link(prompt, 'starship/starship.toml')):
+            keep(prompt, f'Set STARSHIP_CONFIG to {source} in your shell to use Psyche\'s prompt.')
+        elif prompt.exists() and not known_link(prompt, 'starship/starship.toml') and not unchanged_install(prompt) and not args.replace_prompt:
+            keep(prompt, 'Use --replace-prompt to back up and replace this config with Psyche\'s prompt.')
+        else:
+            copy('starship/starship.toml', prompt)
     if 'terminal' in components:
         if os.name == 'nt':
             raise ValueError('Ghostty settings target Linux/macOS; use Windows Terminal on native Windows')
@@ -182,6 +214,11 @@ def make_plan(args):
         preferences = (ROOT / 'ai/preferences.md').read_text(encoding='utf-8')
         merge(codex / 'AGENTS.md', preferences, markdown=True)
         merge(claude / 'CLAUDE.md', preferences, markdown=True)
+    if snippets:
+        guide = bundle / 'INTEGRATION.md'
+        add(guide, ('# Manual integration\n\nExisting files were kept. Add the relevant loader where it fits your\nstartup order, or use --adopt-shell for a backed-up prepend. Inspect overlapping\nalias/function names before adopting; arbitrary shell programs cannot be merged\nsemantically. Local settings below a loader normally override Psyche defaults.\n\n'
+                    + '\n'.join(snippets)).encode('utf-8'))
+        print(f'Integration instructions: {guide}')
     return plan, state
 
 
@@ -241,6 +278,9 @@ def restore(directory, dry_run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--manual', action='store_true', help='deploy shared files and write integration snippets without editing user configs')
+    parser.add_argument('--adopt-shell', action='store_true', help='back up and prepend loaders to existing hand-written shell files')
+    parser.add_argument('--replace-prompt', action='store_true', help='back up and replace an existing or locally edited Starship config')
     parser.add_argument('--components', nargs='+', choices=['shell', 'git', 'prompt', 'tmux', 'terminal', 'ai'])
     parser.add_argument('--home', help='isolated target home; ignores environment path overrides')
     parser.add_argument('--config-home')

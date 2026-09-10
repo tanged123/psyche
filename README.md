@@ -42,6 +42,11 @@ use the Python entry directly from that host; the installer doesn't change polic
 py -3 scripts/install.py --powershell-profile $PROFILE.CurrentUserAllHosts
 ```
 
+Existing hand-written shell files are kept by default; the installer prints the
+path to `~/.config/psyche/INTEGRATION.md` with loaders you can review and add.
+Use `--adopt-shell` to explicitly back up and prepend those loaders instead.
+Already-managed Psyche files update normally.
+
 Open a **new terminal** after installation. Existing shells retain old aliases and
 functions until restarted. Rerun the installer after pulling changes: deployed
 settings are copies, so moving the checkout won't break shell startup.
@@ -50,7 +55,7 @@ settings are copies, so moving the checkout won't break shell startup.
 
 - **Starship:** a P10K-style segmented prompt with a clock, the familiar decorative
   symbols, Git diff counts, commit hash, Nix context and slow-command duration.
-- **Ghostty on Unix:** a Coolnight background, Nerd Font, readable text, modest padding
+- **Ghostty on Unix:** a Catppuccin Mocha background, Nerd Font, readable text, modest padding
   and a steady cursor. Existing local terminal settings override these defaults.
 - **Bash / Zsh:** history settings and all original navigation, Git, Nix and utility shortcuts,
   and guarded integration
@@ -158,12 +163,14 @@ preferences remain authoritative. Install only these defaults with:
 bash scripts/install.sh --components terminal
 ```
 
-Starship's mint/navy/blue/yellow segments follow
+Starship's segmented layout follows
 [Jessica Wang's P10K-style guide](https://dev.to/therubberduckiee/how-to-configure-starship-to-look-exactly-like-p10k-zsh-warp-h9h).
+The colors use [Catppuccin Mocha](https://github.com/catppuccin/palette): muted
+lavender and blue accents on dark segments, including a charcoal Git background.
 The prompt keeps your decorative status symbols and both added/deleted line counts,
 plus username/hostname, commit hash, C and Nix context. Diff counts deliberately
 cost more work on each prompt in large repositories; they are a chosen preference.
-Ghostty uses the reference theme's Coolnight background and foreground.
+Ghostty uses matching Mocha background and foreground colors.
 
 Powerline separators and icons need a Nerd Font. Ghostty is configured for
 **JetBrainsMono Nerd Font**; select that font in Windows Terminal or another host
@@ -175,13 +182,39 @@ macOS). Alternatively install JetBrainsMono from [Nerd Fonts](https://www.nerdfo
 Restart the terminal after installing or changing fonts. Starship changes appear
 at the next prompt; refresh deployed settings with `bash scripts/install.sh --components prompt terminal`.
 
+With WSL, install the font on the **Windows host** if Windows Terminal or VS Code
+renders your terminal. Installing it only inside Linux does not supply Windows
+with the glyphs. In VS Code's user settings, set
+`"terminal.integrated.fontFamily": "JetBrainsMono Nerd Font"`. Add the same font
+as a fallback in `editor.fontFamily` if icons look missing when editing TOML.
+In Windows Terminal, set the profile's Appearance → Font face to that family.
+Restart the host app after installing fonts. Question-mark boxes with intact
+Unicode in the TOML indicate missing glyph coverage, not a reason to remove icons.
+
 ## Local settings, migration and recovery
 
-The installer copies shared shell/Git/tmux files into `~/.config/psyche` and adds
-one marked block to each user config. Defaults precede existing settings, so local
-overrides remain effective. Starship's config is copied to `~/.config/starship.toml`.
-Known symlinks and source lines from the old `pysche` installer are migrated;
-unrelated file symlinks are rejected with an actionable error.
+The installer copies shared settings into `~/.config/psyche`. New shell files get
+one marked loader; already-managed files update that block. Existing hand-written
+Bash, Zsh, PowerShell and login files are left intact unless you use `--adopt-shell`.
+The generated `INTEGRATION.md` gives you the exact loaders to place yourself.
+
+Git, tmux, Ghostty and AI defaults are prepended in managed blocks; local settings
+outside the blocks are preserved. Use `--manual` to deploy shared files and write
+integration instructions without editing any user config. This is useful with
+another dotfile manager or a heavily customized startup sequence. Unrelated file
+symlinks are kept and get integration instructions, rather than blocking the setup.
+Known symlinks and source lines from the old `pysche` installer are still migrated.
+
+An existing Starship config is replaced automatically only when its checksum matches
+the last Psyche installation (or it is a known legacy repo symlink). Unmanaged files
+and local edits are preserved; `--replace-prompt` explicitly backs them up and
+replaces them. This applies to `STARSHIP_CONFIG` overrides too.
+
+When adopting a hand-written shell file, the loader goes before your settings so
+later aliases and values normally win. Inspect overlapping alias/function names
+and existing prompt initialization first: arbitrary shell code cannot be merged
+semantically. Use manual integration when startup order matters. No existing
+macros, PATH additions, credentials or custom functions are deleted.
 
 Custom `XDG_CONFIG_HOME`, `ZDOTDIR`, `CODEX_HOME`, `CLAUDE_CONFIG_DIR`,
 `GIT_CONFIG_GLOBAL` and `STARSHIP_CONFIG` are respected. With `--home`, environment
@@ -193,6 +226,10 @@ bash scripts/install.sh --components shell git prompt   # only shell/Git/prompt
 bash scripts/install.sh --components ai                 # only personal AI rules
 bash scripts/install.sh --home /tmp/psyche-demo --dry-run
 bash scripts/install.sh --zsh-dir "$HOME/custom-zsh"
+bash scripts/install.sh --manual                       # keep all user configs
+bash scripts/install.sh --adopt-shell --dry-run         # preview shell adoption
+bash scripts/install.sh --adopt-shell                   # explicit, backed-up adoption
+bash scripts/install.sh --components prompt --replace-prompt
 ```
 
 Every changed existing file is backed up before writing any configuration. Backup
