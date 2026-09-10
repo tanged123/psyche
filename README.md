@@ -48,10 +48,9 @@ settings are copies, so moving the checkout won't break shell startup.
 
 ## What's included
 
-- **Starship:** the familiar decorative symbols, Git diff counts, commit hash and
-  Nix context, plus elapsed time for commands taking over two seconds. Choose a
-  terminal font with the desired glyph coverage.
-- **Ghostty on Unix:** an opaque dark background, readable text, modest padding
+- **Starship:** a P10K-style segmented prompt with a clock, the familiar decorative
+  symbols, Git diff counts, commit hash, Nix context and slow-command duration.
+- **Ghostty on Unix:** a Coolnight background, Nerd Font, readable text, modest padding
   and a steady cursor. Existing local terminal settings override these defaults.
 - **Bash / Zsh:** history settings and all original navigation, Git, Nix and utility shortcuts,
   and guarded integration
@@ -159,10 +158,22 @@ preferences remain authoritative. Install only these defaults with:
 bash scripts/install.sh --components terminal
 ```
 
-Your existing Starship layout and symbols remain intact, including `git_metrics`.
-Diff counts deliberately cost more work on each prompt in large repositories;
-they are a chosen preference. The only visual addition is the already-configured
-`cmd_duration` module, which was previously missing from the prompt format.
+Starship's mint/navy/blue/yellow segments follow
+[Jessica Wang's P10K-style guide](https://dev.to/therubberduckiee/how-to-configure-starship-to-look-exactly-like-p10k-zsh-warp-h9h).
+The prompt keeps your decorative status symbols and both added/deleted line counts,
+plus username/hostname, commit hash, C and Nix context. Diff counts deliberately
+cost more work on each prompt in large repositories; they are a chosen preference.
+Ghostty uses the reference theme's Coolnight background and foreground.
+
+Powerline separators and icons need a Nerd Font. Ghostty is configured for
+**JetBrainsMono Nerd Font**; select that font in Windows Terminal or another host
+too. On Unix with Nix, `nix profile install .#font` supplies the pinned font. If
+your desktop doesn't discover Nix profile fonts, link its
+`~/.nix-profile/share/fonts/truetype/NerdFonts/JetBrainsMono` directory into
+`~/.local/share/fonts/` on Linux (or install the font files through Font Book on
+macOS). Alternatively install JetBrainsMono from [Nerd Fonts](https://www.nerdfonts.com/).
+Restart the terminal after installing or changing fonts. Starship changes appear
+at the next prompt; refresh deployed settings with `bash scripts/install.sh --components prompt terminal`.
 
 ## Local settings, migration and recovery
 

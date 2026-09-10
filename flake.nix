@@ -16,6 +16,7 @@
         packages = {
           default = pkgs.buildEnv { name = "psyche-core"; paths = core; };
           extras = pkgs.buildEnv { name = "psyche-extras"; paths = extras; };
+          font = pkgs.nerd-fonts.jetbrains-mono;
           inherit (pkgs) python3 git ripgrep starship fzf jq zoxide direnv tmux;
         } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux { inherit (pkgs) ghostty; };
         devShells.default = pkgs.mkShell {

@@ -58,7 +58,7 @@ class InstallerTests(unittest.TestCase):
         path = self.write('.config/ghostty/config.ghostty', 'font-size = 16\n')
         self.run_install('--components', 'terminal')
         self.assertTrue(path.read_text().endswith('font-size = 16\n'))
-        self.assertIn('background = #181818', path.read_text())
+        self.assertIn('background = #010b17', path.read_text())
         self.assertFalse((path.parent / 'config').exists())
         self.run_install('--components', 'terminal')
         self.assertEqual(len(self.backups()), 1)
