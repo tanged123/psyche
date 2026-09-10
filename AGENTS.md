@@ -5,7 +5,7 @@ This repo owns portable shell, Git, prompt and AI preferences, not machine secre
 or project toolchains. Keep package installation separate from configuration.
 
 Use `python3 scripts/test.py` for installer behavior and shell smoke tests.
-Use `shellcheck scripts/*.sh bash/.bashrc` when available. CI additionally runs
+Use `shellcheck scripts/*.sh bash/.bashrc bash/extras.bashrc` when available. CI additionally runs
 the same suite on native Windows and checks PowerShell and Zsh startup.
 Test installation against temporary homes, never the real home directory unless
 applying a tested installation explicitly within the user's requested setup.

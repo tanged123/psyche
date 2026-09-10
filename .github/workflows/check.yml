@@ -23,7 +23,7 @@ jobs:
         run: python scripts/test.py
       - name: Check Bash
         if: runner.os == 'Linux'
-        run: shellcheck scripts/*.sh bash/.bashrc
+        run: shellcheck scripts/*.sh bash/.bashrc bash/extras.bashrc
       - name: Unix entry point
         if: runner.os != 'Windows'
         run: bash scripts/install.sh --home "$RUNNER_TEMP/psyche preview" --dry-run

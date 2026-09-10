@@ -284,7 +284,7 @@ file as context, but are not claimed to load these native files automatically.
 
 ```sh
 python3 scripts/test.py
-shellcheck scripts/*.sh bash/.bashrc
+shellcheck scripts/*.sh bash/.bashrc bash/extras.bashrc
 # Or use the locked development environment:
 nix develop --command python3 scripts/test.py
 ```

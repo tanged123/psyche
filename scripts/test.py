@@ -51,11 +51,11 @@ class InstallerTests(unittest.TestCase):
         original = '#!/bin/bash\nexport KEEP_ME=yes\nalias gs="git status -sb"\n'
         path = self.write('.bashrc', original)
         self.run_install('--components', 'shell')
-        self.assertEqual(path.read_text(), original)
+        self.assertEqual(path.read_text(encoding='utf-8'), original)
         self.assertTrue((self.home / '.config/psyche/INTEGRATION.md').exists())
         self.run_install('--components', 'shell', '--adopt-shell')
-        self.assertTrue(path.read_text().endswith(original))
-        self.assertEqual(path.read_text().count('# >>> psyche >>>'), 1)
+        self.assertTrue(path.read_text(encoding='utf-8').endswith(original))
+        self.assertEqual(path.read_text(encoding='utf-8').count('# >>> psyche >>>'), 1)
 
     def test_manual_mode_keeps_all_user_configs(self):
         paths = {'.gitconfig': '[user]\n name = Mine\n', '.codex/AGENTS.md': 'My rules\n',
@@ -64,19 +64,19 @@ class InstallerTests(unittest.TestCase):
             self.write(path, content)
         self.run_install('--manual')
         for path, content in paths.items():
-            self.assertEqual((self.home / path).read_text(), content)
+            self.assertEqual((self.home / path).read_text(encoding='utf-8'), content)
         self.assertFalse(self.profile.exists())
 
     def test_custom_prompt_and_later_edits_are_preserved(self):
         path = self.write('.config/starship.toml', 'add_newline = false\n')
         self.run_install('--components', 'prompt')
-        self.assertEqual(path.read_text(), 'add_newline = false\n')
+        self.assertEqual(path.read_text(encoding='utf-8'), 'add_newline = false\n')
         self.run_install('--components', 'prompt', '--replace-prompt')
         self.assertEqual(path.read_bytes(), (ROOT / 'starship/starship.toml').read_bytes())
-        content = path.read_text() + '\n# My local change\n'
-        path.write_text(content)
+        content = path.read_text(encoding='utf-8') + '\n# My local change\n'
+        path.write_text(content, encoding='utf-8')
         self.run_install('--components', 'prompt')
-        self.assertEqual(path.read_text(), content)
+        self.assertEqual(path.read_text(encoding='utf-8'), content)
 
     @unittest.skipIf(os.name == 'nt', 'Unix entry point')
     def test_unix_entry_point(self):
@@ -89,8 +89,8 @@ class InstallerTests(unittest.TestCase):
     def test_ghostty_defaults_preserve_local_overrides(self):
         path = self.write('.config/ghostty/config.ghostty', 'font-size = 16\n')
         self.run_install('--components', 'terminal')
-        self.assertTrue(path.read_text().endswith('font-size = 16\n'))
-        self.assertIn('background = #1e1e2e', path.read_text())
+        self.assertTrue(path.read_text(encoding='utf-8').endswith('font-size = 16\n'))
+        self.assertIn('background = #1e1e2e', path.read_text(encoding='utf-8'))
         self.assertFalse((path.parent / 'config').exists())
         self.run_install('--components', 'terminal')
         self.assertEqual(len(self.backups()), 1)
@@ -108,7 +108,7 @@ class InstallerTests(unittest.TestCase):
         local = '[user]\n name = Local Name\n email = local@example.invalid\n[pull]\n ff = false\n[core]\n pager = more\n'
         path = self.write('.gitconfig', local)
         self.run_install('--components', 'git')
-        self.assertTrue(path.read_text().endswith(local))
+        self.assertTrue(path.read_text(encoding='utf-8').endswith(local))
         if shutil.which('git'):
             def config(key):
                 return subprocess.check_output(['git', 'config', '--file', str(path), '--includes', '--get', key], text=True).strip()
@@ -122,8 +122,8 @@ class InstallerTests(unittest.TestCase):
         self.write('.claude/CLAUDE.md', 'Existing Claude preference.\n')
         self.run_install('--components', 'ai')
         for path in ['.codex/AGENTS.md', '.claude/CLAUDE.md']:
-            content = (self.home / path).read_text()
-            self.assertIn((ROOT / 'ai/preferences.md').read_text(), content)
+            content = (self.home / path).read_text(encoding='utf-8')
+            self.assertIn((ROOT / 'ai/preferences.md').read_text(encoding='utf-8'), content)
             self.assertIn('Existing', content)
         self.run_install('--components', 'ai')
         self.assertEqual(len(self.backups()), 1)
@@ -132,7 +132,7 @@ class InstallerTests(unittest.TestCase):
         path = self.write('.config/git/config', '[pull]\n ff = false\n')
         self.run_install('--components', 'git')
         self.assertFalse((self.home / '.gitconfig').exists())
-        self.assertTrue(path.read_text().endswith('[pull]\n ff = false\n'))
+        self.assertTrue(path.read_text(encoding='utf-8').endswith('[pull]\n ff = false\n'))
 
     def test_codex_override_is_reported(self):
         self.write('.codex/AGENTS.override.md', 'Special profile\n')
@@ -151,7 +151,7 @@ class InstallerTests(unittest.TestCase):
     def test_malformed_block_fails_before_any_writes(self):
         path = self.write('.codex/AGENTS.md', '<!-- psyche:start -->\nbroken\n')
         self.run_install(ok=False)
-        self.assertEqual(path.read_text(), '<!-- psyche:start -->\nbroken\n')
+        self.assertEqual(path.read_text(encoding='utf-8'), '<!-- psyche:start -->\nbroken\n')
         self.assertFalse((self.home / '.config').exists())
 
     def test_directory_conflict_fails_before_any_writes(self):
@@ -164,7 +164,7 @@ class InstallerTests(unittest.TestCase):
         target = self.write('outside', 'untouched\n')
         (self.home / '.bashrc').symlink_to(target)
         self.run_install()
-        self.assertEqual(target.read_text(), 'untouched\n')
+        self.assertEqual(target.read_text(encoding='utf-8'), 'untouched\n')
         self.assertTrue((self.home / '.bashrc').is_symlink())
         self.assertTrue((self.home / '.config/psyche/INTEGRATION.md').exists())
 
@@ -177,9 +177,9 @@ class InstallerTests(unittest.TestCase):
         (self.home / '.config/starship.toml').symlink_to(old / 'starship/starship.toml')
         (self.home / '.gitignore_global').symlink_to(old / 'git/.gitignore_global')
         self.run_install()
-        self.assertNotIn(str(old), (self.home / '.bashrc').read_text())
-        self.assertNotIn(str(old), (self.home / '.gitconfig').read_text())
-        self.assertIn('export KEEP_ME=yes', (self.home / '.bashrc').read_text())
+        self.assertNotIn(str(old), (self.home / '.bashrc').read_text(encoding='utf-8'))
+        self.assertNotIn(str(old), (self.home / '.gitconfig').read_text(encoding='utf-8'))
+        self.assertIn('export KEEP_ME=yes', (self.home / '.bashrc').read_text(encoding='utf-8'))
         self.assertFalse((self.home / '.config/starship.toml').is_symlink())
         self.assertFalse((self.home / '.gitignore_global').is_symlink())
 
@@ -199,10 +199,10 @@ class InstallerTests(unittest.TestCase):
         self.run_install()
         backup = self.backups()[0].parent
         path = self.home / '.gitconfig'
-        path.write_text(path.read_text() + '# Later edit\n')
+        path.write_text(path.read_text(encoding='utf-8') + '# Later edit\n', encoding='utf-8')
         self.run_install('--restore', str(backup), ok=False)
         self.assertTrue((self.home / '.config/starship.toml').exists())
-        self.assertIn('Later edit', path.read_text())
+        self.assertIn('Later edit', path.read_text(encoding='utf-8'))
 
     def test_utf16_powershell_profile_is_preserved(self):
         self.profile.parent.mkdir(parents=True)
@@ -241,10 +241,10 @@ class InstallerTests(unittest.TestCase):
         bin_dir = self.home / 'bin'
         bin_dir.mkdir()
         fake_fzf = bin_dir / 'fzf'
-        fake_fzf.write_text('#!/bin/sh\necho unsupported >&2\nexit 2\n')
+        fake_fzf.write_text('#!/bin/sh\necho unsupported >&2\nexit 2\n', encoding='utf-8')
         fake_fzf.chmod(0o755)
         fake_starship = bin_dir / 'starship'
-        fake_starship.write_text('#!/bin/sh\necho prompt-on-dumb-terminal >&2\nexit 1\n')
+        fake_starship.write_text('#!/bin/sh\necho prompt-on-dumb-terminal >&2\nexit 1\n', encoding='utf-8')
         fake_starship.chmod(0o755)
         # compinit uses the system mv when persisting its completion cache.
         (bin_dir / 'mv').symlink_to(shutil.which('mv'))

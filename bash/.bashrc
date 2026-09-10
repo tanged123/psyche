@@ -55,7 +55,7 @@ function loc() {
             -not -path '*/target/*' \
             -not -path '*/dist/*' \
             -not -path '*/build/*' \
-            -exec grep -Iq . {} \; -print0 | xargs -0 wc -l | tail -n 1
+            -exec env grep -Iq . {} \; -print0 | xargs -0 wc -l | tail -n 1
     fi
 }
 
@@ -78,8 +78,9 @@ function logrun() {
     mkdir -p logs
     
     # Create a safe filename: logs/YYYY-MM-DD_command-name.log
-    local cmd_name=$(echo "$1" | sed 's/[^a-zA-Z0-9]/_/g')
-    local timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+    local cmd_name=${1//[^a-zA-Z0-9]/_}
+    local timestamp
+    timestamp=$(date +%Y-%m-%d_%H-%M-%S) || return
     local logfile="logs/${timestamp}_${cmd_name}.log"
     
     echo "📝 Logging output to: $logfile"
@@ -209,7 +210,7 @@ function git-nuke() {
     echo "Current directory: $PWD"
     echo "This will destroy all untracked files and reset everything to HEAD."
     if [ ${#@} -gt 0 ]; then
-        echo "Excluding patterns: $@"
+        echo "Excluding patterns: $*"
     fi
     read -p "Are you absolutely sure? (y/N) " -n 1 -r
     echo    # Move to a new line
@@ -257,6 +258,7 @@ function aliases() {
 PSYCHE_BASH_DIR="${BASH_SOURCE[0]%/*}"
 PSYCHE_REPO_ROOT=${PSYCHE_REPO_ROOT:-${PSYCHE_BASH_DIR%/*}}
 if [ -f "$PSYCHE_BASH_DIR/extras.bashrc" ]; then
+    # shellcheck source=bash/extras.bashrc
     source "$PSYCHE_BASH_DIR/extras.bashrc"
 fi
 return 0
