@@ -152,7 +152,7 @@ alias gsu='git submodule update --init --recursive'
 # -----------------------------------------------------------
 # 5. NIXOS & FLAKE HELPERS
 # -----------------------------------------------------------
-alias nixdev='nix develop .?submodules=1'
+alias nixdev="nix develop '.?submodules=1'"
 alias nixrun='nix run'
 alias nsh='nix-shell -p'
 
@@ -217,11 +217,13 @@ alias gwipe='git-nuke'
 # -----------------------------------------------------------
 # 7. STARSHIP INIT
 # -----------------------------------------------------------
-eval "$(starship init zsh)"
+if [[ ${TERM:-dumb} != dumb ]] && command -v starship >/dev/null 2>&1; then
+    eval "$(starship init zsh)"
+fi
 
 # 8. CONFIG HELPERS
-alias zshconfig='code $PYSCHE_ZSH_DIR/.zshrc && source $HOME/.zshrc'
-alias reload='source $HOME/.zshrc'
+alias zshconfig='code --wait "$PSYCHE_REPO_ROOT/zsh/.zshrc" && bash "$PSYCHE_REPO_ROOT/scripts/install.sh" --components shell && source "$HOME/.zshrc"'
+alias reload='source "$HOME/.zshrc"'
 
 function aliases() {
     if [ -z "$1" ]; then
@@ -231,8 +233,10 @@ function aliases() {
     fi
 }
 
-# 9. PYSCHE EXTRAS
-PYSCHE_ZSH_DIR="${0:A:h}"
-if [ -f "$PYSCHE_ZSH_DIR/extras.zshrc" ]; then
-    source "$PYSCHE_ZSH_DIR/extras.zshrc"
+# Shared settings are copied beside this file by the installer.
+PSYCHE_ZSH_DIR="${0:A:h}"
+PSYCHE_REPO_ROOT=${PSYCHE_REPO_ROOT:-${PSYCHE_ZSH_DIR%/*}}
+if [ -f "$PSYCHE_ZSH_DIR/extras.zshrc" ]; then
+    source "$PSYCHE_ZSH_DIR/extras.zshrc"
 fi
+return 0

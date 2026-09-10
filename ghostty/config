@@ -1,0 +1,10 @@
+# Catppuccin Mocha; keep the user's login shell.
+font-family = JetBrainsMono Nerd Font
+font-size = 12
+background = #1e1e2e
+foreground = #cdd6f4
+background-opacity = 1
+window-padding-x = 10
+window-padding-y = 8
+cursor-style-blink = false
+mouse-hide-while-typing = true

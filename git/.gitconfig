@@ -1,8 +1,13 @@
-[user]
-    # TODO: Set your own name and email
-    # name = Your Name
-    # email = you@example.com
-
+[init]
+    defaultBranch = main
+[fetch]
+    prune = true
+[pull]
+    ff = only
+[merge]
+    conflictStyle = zdiff3
+[diff]
+    colorMoved = default
 [alias]
     s = status
     co = checkout
@@ -11,26 +16,4 @@
     b = branch
     p = push
     l = log --oneline --graph --decorate
-
-[core]
-    editor = vim
-    excludesfile = ~/.gitignore_global
-    autocrlf = input
-    pager = delta
-
-[interactive]
-    diffFilter = delta --color-only
-
-[delta]
-    navigate = true    # use n and N to move between diff sections
-    line-numbers = true
-    side-by-side = true
-
-[merge]
-    conflictstyle = diff3
-
-[diff]
-    colorMoved = default
-
-[init]
-    defaultBranch = main
+# Identity, editor, pager and line endings belong to the machine/project.

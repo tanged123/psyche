@@ -1,32 +1,108 @@
-# ~/.config/starship.toml
-
+# P10K-style layout with muted Catppuccin Mocha colors:
+# https://github.com/theRubberDuckiee/dev-environment-files/blob/main/starship.toml
+# Keep the familiar status symbols and both Git diff counts.
+"$schema" = 'https://starship.rs/config-schema.json'
 add_newline = true
+palette = 'catppuccin_mocha'
 
-# -----------------------------------------------------------
-# GLOBAL FORMAT
-# -----------------------------------------------------------
-# We place the C/C++ module right after the directory
 format = """
+[](fg:lavender)\
+$os\
 $username\
 $hostname\
+[](fg:lavender bg:mantle)\
+$time\
+[](fg:mantle bg:surface0)\
 $directory\
-$c\
+[](fg:surface0 bg:surface1)\
 $git_branch\
 $git_commit\
 $git_state\
 $git_metrics\
 $git_status\
+[](fg:surface1) \
+$c\
 $nix_shell\
-$line_break\
+$cmd_duration\
 $character"""
 
-[character]
-success_symbol = "[➜](bold green)"
-error_symbol = "[✗](bold red)"
+[palettes.catppuccin_mocha]
+lavender = '#B4BEFE'
+mantle = '#181825'
+surface0 = '#313244'
+surface1 = '#45475A'
+ink = '#1E1E2E'
+text = '#CDD6F4'
+added = '#A6E3A1'
+deleted = '#F38BA8'
 
-# -----------------------------------------------------------
-# NIX SHELL (The Snowflake)
-# -----------------------------------------------------------
+[os]
+disabled = false
+format = '[ $symbol]($style)'
+style = 'fg:ink bg:lavender'
+
+[username]
+show_always = true
+format = '[$user]($style)'
+style_user = 'fg:ink bg:lavender'
+style_root = 'bold fg:deleted bg:lavender'
+
+[hostname]
+ssh_only = false
+format = '[@$hostname ]($style)'
+style = 'fg:ink bg:lavender'
+
+[time]
+disabled = false
+time_format = '%R'
+format = '[ 󱑍 $time ]($style)'
+style = 'fg:lavender bg:mantle'
+
+[directory]
+format = '[  $path$read_only ]($style)'
+style = 'bold fg:#89B4FA bg:surface0'
+truncation_length = 3
+truncation_symbol = '…/'
+read_only = ' '
+read_only_style = 'fg:text bg:surface0'
+
+[git_branch]
+symbol = '🌱 '
+format = '[ $symbol$branch ]($style)'
+style = 'fg:text bg:surface1'
+
+[git_commit]
+only_detached = false
+format = '[\($hash$tag\) ]($style)'
+style = 'fg:text bg:surface1'
+tag_symbol = '🔖 '
+
+[git_state]
+format = '[\($state( $progress_current/$progress_total)\) ]($style)'
+style = 'bold fg:deleted bg:surface1'
+
+[git_metrics]
+disabled = false
+only_nonzero_diffs = false
+format = '[+$added]($added_style)[/-$deleted ]($deleted_style)'
+added_style = 'fg:added bg:surface1'
+deleted_style = 'fg:deleted bg:surface1'
+
+[git_status]
+format = '([$all_status$ahead_behind ]($style))'
+style = 'fg:text bg:surface1'
+conflicted = '🏳'
+ahead = '🏎💨'
+behind = '😰'
+diverged = '😵'
+up_to_date = ''
+untracked = '🤷'
+stashed = '📦'
+modified = '📝'
+staged = '[++\($count\)](fg:added bg:surface1)'
+renamed = '👅'
+deleted = '🗑'
+
 [nix_shell]
 disabled = false
 impure_msg = '[impure](bold red)'
@@ -34,79 +110,26 @@ pure_msg = '[pure](bold green)'
 format = 'via [$symbol$state]($style) '
 symbol = '❄️  '
 
-# -----------------------------------------------------------
-# GIT: VERBOSE CONFIGURATION
-# -----------------------------------------------------------
-[git_branch]
-symbol = "🌱 "
-style = "bold purple"
-
-[git_commit]
-# Shows the commit hash/tag even if you are on a branch
-only_detached = false
-# Shows the tag if available, otherwise the first 7 chars of hash
-format = "[\\($hash$tag\\)]($style) "
-style = "bold yellow"
-tag_symbol = "🔖 "
-
-[git_metrics]
-# Shows how many lines added/deleted
-disabled = false
-added_style = "bold green"
-deleted_style = "bold red"
-format = "[+$added]($added_style)/[-$deleted]($deleted_style) "
-
-[git_status]
-conflicted = "🏳"
-ahead = "🏎💨"
-behind = "😰"
-diverged = "😵"
-up_to_date = ""
-untracked = "🤷"
-stashed = "📦"
-modified = "📝"
-staged = '[++\($count\)](green)'
-renamed = "👅"
-deleted = "🗑"
-
-# -----------------------------------------------------------
-# OTHER LANGUAGES
-# -----------------------------------------------------------
-[nodejs]
-symbol = "⬢ "
-style = "bold green"
-
-[python]
-symbol = "🐍 "
-style = "yellow"
-
-[rust]
-symbol = "🦀 "
-style = "bold red"
-
-[golang]
-symbol = "🐹 "
-style = "bold cyan"
-
-# -----------------------------------------------------------
-# SYSTEM INFO
-# -----------------------------------------------------------
-[username]
-style_user = "white bold"
-style_root = "black bold red"
-format = "[$user]($style) "
-show_always = true
-
-[hostname]
-ssh_only = false
-format = "on [$hostname](bold red) "
-disabled = false
-
-[directory]
-truncation_length = 3
-truncation_symbol = "…/"
-style = "bold blue"
-
 [cmd_duration]
 min_time = 2000
-format = "took [$duration](bold yellow)"
+format = '[󱎫 $duration ](fg:lavender)'
+
+[character]
+success_symbol = '[➜](bold green)'
+error_symbol = '[✗](bold red)'
+
+[nodejs]
+symbol = '⬢ '
+style = 'bold green'
+
+[python]
+symbol = '🐍 '
+style = 'fg:#F9E2AF'
+
+[rust]
+symbol = '🦀 '
+style = 'bold red'
+
+[golang]
+symbol = '🐹 '
+style = 'bold cyan'

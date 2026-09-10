@@ -1,12 +1,18 @@
-# .bashrc additions for Pysche
+# shellcheck shell=bash
+# .bashrc additions for Psyche
 
 # 1. FZF Setup (Fuzzy Finder)
 if command -v fzf >/dev/null 2>&1; then
-    eval "$(fzf --bash)"
+    if _psyche_fzf=$(fzf --bash 2>/dev/null); then
+        eval "$_psyche_fzf"
+    fi
+    unset _psyche_fzf
     
     # Use fd instead of find (faster, ignores .git)
-    export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
-    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    if command -v fd >/dev/null 2>&1; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    fi
 fi
 
 # 2. Modern Replacements
